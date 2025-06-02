@@ -124,7 +124,7 @@ alias config.nvim="vim ~/.config/nvim/init.vim"
 alias vim="nvim"
 alias ls="exa --icons"
 
-
+alias restart.audio="pulseaudio -k && pulseaudio --start"
 
 # Application
 alias flatpak.list="flatpak list"
