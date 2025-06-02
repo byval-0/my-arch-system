@@ -1,0 +1,2 @@
+# ignore nvim plugin file
+dotfiles/.config/nvim/plugged/*
