@@ -1,0 +1,146 @@
+# new
+sudo pacman -Syyu
+
+# Utility tool
+sudo pacman -S --needed kitty fastfetch htop vim neovim base-devel linux-headers git sudo wget cmake rust exa font-manager jdk-openjdk
+
+# Package Manager
+# Install yay
+git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si
+# Install flatpak
+sudo pacman -S flatpak
+
+# Install tapper (Keyboard layout switcher)
+git clone https://aur.archlinux.org/kbd-tapper.git && cd kbd-tapper && makepkg -si
+# add to hyprland config
+# kb_layout = us,th
+# kb_options = grp:ctrl_space_toggle
+
+# Auto mount device
+sudo pacman -S --needed udiskie
+# add to hyprland
+# exec-once = udiskie
+
+# Copy-Past Tool
+sudo pacman -S --needed cliphist wl-clipboard
+# Add to hyprland config
+# exec-once = wl-clipboard-history -t
+# exec-once = wl-paste --watch cliphist store
+# exec-once = rm "$HOME/.cache/cliphist/db" 
+
+# Login
+sudo pacman -S --needed greetd greetd-regreet
+
+##
+## System Setup
+##
+
+## Network
+
+# Auto plug network interface
+sudo pacman -S --needed ifplugd
+
+# DHCP
+sudo pacman -S --needed dhcpcd
+
+# DNS to add config to /etc/dhcpcd
+# static dns_nameservers=8.8.8.8 8.8.4.4
+# nohook resolv.conf
+#
+# Then do
+# sudo dhcpcd -d
+
+# Openresolver
+sudo pacman -S --needed openresolv
+
+
+# Graphic Card
+sudo pacman -S --needed nvidia-dkms nvidia-utils egl-wayland
+
+# Hyprland
+sudo pacman -S hyprland uwsm waybar foot thunar swww wofi
+# eww Status bar
+# see https://elkowar.github.io/eww/
+yay -S eww
+
+## Terminal 
+#
+sudo pacman -S ohmyzsh
+# Nerd-fonts
+sudo pacman -S nerd-fonts
+# Powerlevel 10k
+# p10k configure
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
+
+
+## Audio
+#
+sudo pacman -S --needed pulseaudio pulseaudio-alsa pulseaudio-bluetooth pulseaudio-equalizer pulseaudio-jack pulseaudio-lirc pulseaudio-zeroconf pavucontrol
+# Audio control GUI
+# sudo pacman -S kmix
+# pavucontrol seem to be better
+
+# screenshot
+yay -S hyprshot
+
+# Web Browser
+yay -S zen-browser-bin
+
+##
+## Follow must have by Hyprland
+##
+
+# Notification Center
+# sudo pacman -S --needed swaync
+# add swaync to exec-once as well on hyprland config
+# or use dunst
+# git clone https://github.com/dunst-project/dunst.git
+# cd dunst
+# make
+# sudo make install
+
+
+# Pipewire (For screen sharing)
+sudo pacman -S --needed pipewire wireplumber
+
+# Desktop Portal
+sudo pacman -S --needed xdg-desktop-portal-hyprland
+
+# Authentication Agent
+sudo pacman -S --needed hyprpolkitagent
+# Add to hyprland config
+# exec-once = systemctl --user start hyprpolkitagent
+
+# Qt Wayland Support 
+sudo pacman -S --needed qt5-wayland qt6-wayland
+
+# On screen display
+yay -S avizo
+
+# HERE STEAM
+# 
+sudo pacman -S steam
+# nvidia driver install first
+# Here is a fix if steam cannot open because of failed to load driver: nouveau
+sudo pacman -S --needed lib32-nvidia-utils
+
+
+# Music Player
+yay -S kew
+
+
+# Keyring Password (Saved password)
+sudo pacman -S --needed gnome-keyring 
+# And add these to .xinitrc
+# eval $(/usr/bin/gnome-keyring-daemon --start)
+# export SSH_AUTH_SOCK
+
+## See wallpaper
+## https://wallhaven.cc/
+
+## More? 
+# Checkout https://wearewaylandnow.com/ 
+
+# Consider
+# Nyoom.nvim
