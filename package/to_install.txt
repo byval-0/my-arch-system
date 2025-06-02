@@ -136,6 +136,10 @@ sudo pacman -S --needed gnome-keyring libsecret
 # eval $(/usr/bin/gnome-keyring-daemon --start)
 # export SSH_AUTH_SOCK
 
+# to make git store credential using gnome-keyring run this
+# git config --global credential.helper /usr/lib/git-core/git-credential-libsecret
+
+
 ## See wallpaper
 ## https://wallhaven.cc/
 
