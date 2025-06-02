@@ -131,7 +131,7 @@ yay -S kew
 
 
 # Keyring Password (Saved password)
-sudo pacman -S --needed gnome-keyring 
+sudo pacman -S --needed gnome-keyring libsecret
 # And add these to .xinitrc
 # eval $(/usr/bin/gnome-keyring-daemon --start)
 # export SSH_AUTH_SOCK
