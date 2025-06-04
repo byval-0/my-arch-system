@@ -1,0 +1,17 @@
+Control audio output device through `pactl`
+
+List full device
+> pactl list
+
+List short 
+> pactl list short sinks
+
+Example of setting output device
+> pactl set-card-profile alsa_card.pci-0000_00_1f.3 output:iec958-stereo 
+
+In case something weird happen, restart it using
+> pulseaudio -k
+> pulseaudio --start
+
+get default sink
+> pactl get-default-sink
