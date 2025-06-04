@@ -2,7 +2,7 @@
 sudo pacman -Syyu
 
 # Utility tool
-sudo pacman -S --needed kitty fastfetch htop vim neovim base-devel linux-headers git sudo wget cmake rust exa font-manager jdk-openjdk
+sudo pacman -S --needed kitty fastfetch htop vim neovim base-devel linux-headers git sudo wget cmake rust exa font-manager jdk-openjdk meson cpio
 
 # Package Manager
 # Install yay
@@ -26,7 +26,7 @@ sudo pacman -S --needed cliphist wl-clipboard
 # Add to hyprland config
 # exec-once = wl-clipboard-history -t
 # exec-once = wl-paste --watch cliphist store
-# exec-once = rm "$HOME/.cache/cliphist/db" 
+# exec-once = rm "$HOME/.cache/cliphist/db"
 
 # Login
 sudo pacman -S --needed greetd greetd-regreet
@@ -63,7 +63,7 @@ sudo pacman -S hyprland uwsm waybar foot thunar swww wofi
 # see https://elkowar.github.io/eww/
 yay -S eww
 
-## Terminal 
+## Terminal
 #
 sudo pacman -S ohmyzsh
 # Nerd-fonts
@@ -112,14 +112,14 @@ sudo pacman -S --needed hyprpolkitagent
 # Add to hyprland config
 # exec-once = systemctl --user start hyprpolkitagent
 
-# Qt Wayland Support 
+# Qt Wayland Support
 sudo pacman -S --needed qt5-wayland qt6-wayland
 
 # On screen display
 yay -S avizo
 
 # HERE STEAM
-# 
+#
 sudo pacman -S steam
 # nvidia driver install first
 # Here is a fix if steam cannot open because of failed to load driver: nouveau
@@ -143,8 +143,8 @@ sudo pacman -S --needed gnome-keyring libsecret
 ## See wallpaper
 ## https://wallhaven.cc/
 
-## More? 
-# Checkout https://wearewaylandnow.com/ 
+## More?
+# Checkout https://wearewaylandnow.com/
 
 # Consider
 # Nyoom.nvim
