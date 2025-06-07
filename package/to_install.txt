@@ -81,6 +81,9 @@ sudo pacman -S --needed pulseaudio pulseaudio-alsa pulseaudio-bluetooth pulseaud
 # sudo pacman -S kmix
 # pavucontrol seem to be better
 
+# video Player
+sudo pacman -S vlc
+
 # screenshot
 yay -S hyprshot
 
