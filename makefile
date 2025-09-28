@@ -16,3 +16,13 @@ link-hyprland:
 	fi
 	@echo "Creating symlink for hyprland config ~/.config/hypr/hyprland.conf."
 	@ln ./dotfiles/.config/hypr/hyprland.conf ~/.config/hypr/hyprland.conf
+
+link-nvim:
+	@mkdir -p ~/.config/nvim
+	@if [ -f "$$HOME/.config/nvim/init.vim" ]; then \
+		echo "Backing up existing nvim/init.vim ..."; \
+		mv $$HOME/.config/nvim/init.vim $$HOME/.config/nvim/init.vim.backup; \
+	fi
+	@echo "Creating symlink for nvim config ~/.config/nvim/init.vim"
+	@ln ./dotfiles/.config/nvim/init.vim ~/.config/nvim/init.vim
+	@echo "Link complete!"
