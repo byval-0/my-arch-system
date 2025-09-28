@@ -1,0 +1,9 @@
+ref: https://www.reddit.com/r/zen_browser/comments/1jou21y/comment/mkuhk42/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+
+[SOLVED]
+
+    Set Bookmarks Toolbar to Never Show by hitting Ctrl+Shift+B
+
+    Go to about:config > zen.view.experimental-no-window-controls > true
+
+
