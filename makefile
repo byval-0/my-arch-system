@@ -26,3 +26,14 @@ link-nvim:
 	@echo "Creating symlink for nvim config ~/.config/nvim/init.vim"
 	@ln ./dotfiles/.config/nvim/init.vim ~/.config/nvim/init.vim
 	@echo "Link complete!"
+
+link-dunst:
+	@mkdir -p ~/.config/dunst
+	@if [ -f "$$HOME/.config/dunst/dunstrc" ]; then \
+		echo "Backing up existing dunst/dunstrc ..."; \
+		mv $$HOME/.config/dunst/dunstrc $$HOME/.config/dunst/dunstrc.backup; \
+	fi
+	@echo "Creating symlink for nvim config ~/.config/dunst/dunstrc"
+	@ln ./dotfiles/.config/dunst/dunstrc ~/.config/dunst/dunstrc
+	@echo "Link complete!"
+
