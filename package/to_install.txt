@@ -56,6 +56,7 @@ sudo pacman -S --needed openresolv
 
 # Graphic Card
 sudo pacman -S --needed nvidia-dkms nvidia-utils egl-wayland
+sudo pacman -S vulkan-intel
 
 # Hyprland
 sudo pacman -S hyprland uwsm waybar foot thunar swww wofi
