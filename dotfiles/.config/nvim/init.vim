@@ -4,10 +4,11 @@ Plug 'folke/tokyonight.nvim'
 Plug 'xiyaowong/transparent.nvim' "Transparent background colour
 
 " Git
-Plug 'f-person/git-blame.nvim'
+Plug 'f-person/git-blame.nvim' " Time to blame someone
 Plug 'esmuellert/vscode-diff.nvim' "Run :CodeDiff install
+Plug 'sindrets/diffview.nvim' " For seeing different between commit
 Plug 'tpope/vim-fugitive' "For git control (require by vimflog)
-Plug 'rbong/vim-flog' " For git tree
+Plug 'isakbm/gitgraph.nvim' " For better git graph
 
 " LSP
 Plug 'sheerun/vim-polyglot'
@@ -19,7 +20,6 @@ Plug 'hrsh7th/nvim-cmp'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'L3MON4D3/LuaSnip'
 
-
 " Enhance Nvim
 Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }
 Plug 'wurli/visimatch.nvim' " Highlight visual match
@@ -29,11 +29,15 @@ Plug 'nvim-telescope/telescope.nvim' "telescope for fast switching or searching 
 Plug 'nvim-tree/nvim-web-devicons' "icon plugin
 Plug 'MunifTanjim/nui.nvim' "UI enhancement
 Plug 'nvim-lualine/lualine.nvim' "Line enhancement
+Plug 'romainl/vim-cool' " Remove higlight after search done (why would it require a plugin to do something this?)
+Plug 'sphamba/smear-cursor.nvim' " Cursor animation
+Plug 'ya2s/nvim-cursorline' " Cursor line highlight
+Plug 'kevinhwang91/nvim-ufo' " Fold/Unfold scope
+Plug 'kevinhwang91/promise-async' " depdency for nvim-ufo
 
 " Ease of use
 Plug 'nvim-neo-tree/neo-tree.nvim' "File Explorer as tree
 Plug 'phaazon/hop.nvim' " For hopping around the code
-Plug 'lewis6991/gitsigns.nvim'
 Plug 'numToStr/Comment.nvim' "Comment line
 Plug 'famiu/bufdelete.nvim' "Easily Buffer controller
 Plug 'akinsho/bufferline.nvim', { 'tag': '*' } "Bufferline
@@ -42,11 +46,6 @@ Plug 'gelguy/wilder.nvim' " Cmd hint
 Plug 'roxma/nvim-yarp' " yarp for cmd hint
 Plug 'roxma/vim-hug-neovim-rpc' " for cmd hint
 
-
-" Auto Complete
-Plug 'hrsh7th/nvim-cmp'
-Plug 'hrsh7th/cmp-nvim-lsp'
-Plug 'L3MON4D3/LuaSnip'
 
 call plug#end()
 
@@ -59,14 +58,19 @@ set encoding=UTF-8
 set termguicolors
 syntax on
 colorscheme tokyonight
+set signcolumn=yes:1 " Fix glitch when moving cursor through file (icon rendering at line number make it glitch)
 
 " Global config
+
+" Minimap
+let g:minimap_git_colors = 1
+let g:minimap_highlight_search = 1
 
 
 
 " Lua config
 lua << EOF
--- initial p
+-- initial
 vim.g.mapleader = " "
 vim.opt.number = true
 vim.opt.tabstop = 2
@@ -79,10 +83,32 @@ vim.opt.clipboard = "unnamedplus"
 local hop = require('hop')
 hop.setup()
 require("range-highlight").setup()
-require("gitsigns").setup()
 require("Comment").setup()
 require("transparent").setup()
-require('lualine').setup()
+require('smear_cursor').enabled = true
+
+-- cursor line highlight
+require('nvim-cursorline').setup {
+  cursorline = {
+    enable = true,
+    timeout = 500,
+    number = false,
+  },
+  cursorword = {
+    enable = true,
+    min_length = 3,
+    hl = { underline = true },
+  }
+}
+
+require('lualine').setup({
+  options = {
+    disabled_filetypes = {
+      statusline = { 'neo-tree' },
+      tabline = { 'neo-tree' },
+    }
+  }
+})
 
 -- uifloatup for lsp (Might not use)
 require("lspsaga").setup({
@@ -90,6 +116,31 @@ require("lspsaga").setup({
     border = "rounded"
   }
 })
+
+-- Neo Tree setup
+require("neo-tree").setup({
+  close_if_last_window = true,
+  enable_git_status = true,
+  enable_diagnostics = true,
+  filesystem = {
+    filtered_items = {
+      visible = true
+    },
+    use_libuv_file_watcher = true
+  },
+  window = {
+    width = 25
+  }
+})
+local events = require("neo-tree.events")
+events.fire_event(events.GIT_EVENT)
+
+-- UFO Fold/unfold setup
+require('ufo').setup()
+vim.o.foldcolumn = '1' -- '0' is not bad
+vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
 
 
 -- Cmd Hint
@@ -121,13 +172,13 @@ require("mini.pairs").setup()
 require("mini.surround").setup()
 require("mini.indentscope").setup()
 require("mini.trailspace").setup()
-require("mini.animate").setup({
-  cursor = { enable = true },
-  scroll = { enable = false },
-  resize = { enable = true },
-  open = { enable = true },
-  close = { enable = true },
-})
+--require("mini.animate").setup({
+--  cursor = { enable = true },
+--  scroll = { enable = false },
+--  resize = { enable = true },
+--  open = { enable = true },
+--  close = { enable = true },
+--})
 
 
 -- Comment
@@ -166,7 +217,7 @@ require("bufferline").setup{
         delay = 200,
         reveal = {'close'}
     },
-    diagnostics = "coq",
+    diagnostics = "cmp",
     modified_icon = '●',
     show_close_icon = false,
     show_buffer_close_icons = false,
@@ -222,7 +273,7 @@ require("mason").setup()
 require("mason-lspconfig").setup({
   ensure_installed = {
     "gopls",
-    "typescript-language-server",
+    "ts_ls",
     "lua_ls",
     "rust_analyzer",
   },
@@ -257,6 +308,32 @@ for name, cfg in pairs(servers) do
   cfg.capabilities = capabilities
   vim.lsp.config(name, cfg)
 end
+
+-- GIT Graph
+require('gitgraph').setup({
+  -- Remove the "opts" wrapper, put settings directly here
+  git_cmd = "git",
+  symbols = {
+    -- merge_commit = 'M',
+    -- commit = '*',
+  },
+  format = {
+    timestamp = '%H:%M:%S %d-%m-%Y',
+    fields = { 'hash', 'timestamp', 'author', 'branch_name', 'tag' },
+  },
+  hooks = {
+     -- Check diff of a commit
+    on_select_commit = function(commit)
+      vim.notify('DiffviewOpen ' .. commit.hash .. '^!')
+      vim.cmd(':DiffviewOpen ' .. commit.hash .. '^!')
+    end,
+    -- Check diff from commit a -> commit b
+    on_select_range_commit = function(from, to)
+      vim.notify('DiffviewOpen ' .. from.hash .. '~1..' .. to.hash)
+      vim.cmd(':DiffviewOpen ' .. from.hash .. '~1..' .. to.hash)
+    end,
+  },
+})
 
 
 -- nvim-cmp setup
@@ -313,7 +390,7 @@ vim.keymap.set("n", "<leader>e", ":Neotree toggle<CR>")
 vim.keymap.set("n", "<C-p>",
 function()
   builtin.find_files({
-    hidden = true,
+    hidden = false,
   })
 end
 -- builtin.find_files
@@ -330,14 +407,30 @@ vim.keymap.set('n', '<Tab>', '<Cmd>BufferLineCycleNext<CR>', { silent = true })
 -- Navigate to the previous buffer
 vim.keymap.set('n', '<S-Tab>', '<Cmd>BufferLineCyclePrev<CR>', { silent = true })
 -- Close Buffer using bufdelete
-vim.keymap.set('n', '<leader>x', '<Cmd>Bdelete<CR>', { silent = true })
+vim.keymap.set('n', '<leader>q', '<Cmd>Bdelete<CR>', { silent = true })
 -- Save
 vim.keymap.set('n', '<leader>s', ':w<CR>', { silent = true })
 
+-- Next Tab
+vim.keymap.set('n', '<leader><Tab>', '<Cmd>tabnext<CR>', { silent = true })
+-- Previous Tab
+vim.keymap.set('n', '<leader><S-Tab>', '<Cmd>tabprevious<CR>', { silent = true })
+-- New Tab
+vim.keymap.set('n', '<leader>tn', '<Cmd>tabnew<CR>', { silent = true })
+-- Close Tab
+vim.keymap.set('n', '<leader>tq', '<Cmd>tabclose<CR>', { silent = true })
+
+-- Git Graph
+vim.keymap.set('n', '<leader>gl', function()
+  require('gitgraph').draw({}, { all = true, max_count = 5000 })
+end, { desc = "GitGraph - Draw" })
+
+-- Keymap lspsaga hover_doc
+vim.keymap.set('n', '<leader>K', '<Cmd>Lspsaga hover_doc<CR>', { silent = true })
+
+-- UFO controller
+vim.keymap.set('n', '<leader>l', require('ufo').openAllFolds)
+vim.keymap.set('n', '<leader>h', require('ufo').closeAllFolds)
+
 EOF
-
-" Keymap for hover (uses lspsaga hover_doc)
-nnoremap K <cmd>Lspsaga hover_doc<CR>
-
-
 
