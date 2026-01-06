@@ -21,6 +21,9 @@ sudo pacman -S --needed udiskie
 # add to hyprland
 # exec-once = udiskie
 
+# Install ntfs-3g to tell linux how to read ntfs partition safety
+sudo pacman -S ntfs-3g
+
 # Copy-Past Tool
 sudo pacman -S --needed cliphist wl-clipboard
 # Add to hyprland config
