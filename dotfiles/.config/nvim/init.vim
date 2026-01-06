@@ -8,7 +8,8 @@ Plug 'f-person/git-blame.nvim' " Time to blame someone
 Plug 'esmuellert/vscode-diff.nvim' "Run :CodeDiff install
 Plug 'sindrets/diffview.nvim' " For seeing different between commit
 Plug 'tpope/vim-fugitive' "For git control (require by vimflog)
-Plug 'isakbm/gitgraph.nvim' " For better git graph
+Plug 'NeogitOrg/neogit'
+Plug 'lewis6991/gitsigns.nvim' " Show changes in git
 
 " LSP
 Plug 'sheerun/vim-polyglot'
@@ -34,6 +35,7 @@ Plug 'sphamba/smear-cursor.nvim' " Cursor animation
 Plug 'ya2s/nvim-cursorline' " Cursor line highlight
 Plug 'kevinhwang91/nvim-ufo' " Fold/Unfold scope
 Plug 'kevinhwang91/promise-async' " depdency for nvim-ufo
+Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' } " Prettier auto format
 
 " Ease of use
 Plug 'nvim-neo-tree/neo-tree.nvim' "File Explorer as tree
@@ -55,6 +57,7 @@ set hlsearch
 set nocompatible
 set autoindent
 set encoding=UTF-8
+set ambiwidth=single
 set termguicolors
 syntax on
 colorscheme tokyonight
@@ -126,6 +129,9 @@ require("neo-tree").setup({
     filtered_items = {
       visible = true
     },
+    follow_current_file = {
+      enabled = true
+    },
     use_libuv_file_watcher = true
   },
   window = {
@@ -142,6 +148,7 @@ vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decr
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 
+require('gitsigns').setup({})
 
 -- Cmd Hint
 local wilder = require('wilder')
@@ -309,32 +316,38 @@ for name, cfg in pairs(servers) do
   vim.lsp.config(name, cfg)
 end
 
--- GIT Graph
-require('gitgraph').setup({
-  -- Remove the "opts" wrapper, put settings directly here
-  git_cmd = "git",
-  symbols = {
-    -- merge_commit = 'M',
-    -- commit = '*',
-  },
-  format = {
-    timestamp = '%H:%M:%S %d-%m-%Y',
-    fields = { 'hash', 'timestamp', 'author', 'branch_name', 'tag' },
-  },
-  hooks = {
-     -- Check diff of a commit
-    on_select_commit = function(commit)
-      vim.notify('DiffviewOpen ' .. commit.hash .. '^!')
-      vim.cmd(':DiffviewOpen ' .. commit.hash .. '^!')
-    end,
-    -- Check diff from commit a -> commit b
-    on_select_range_commit = function(from, to)
-      vim.notify('DiffviewOpen ' .. from.hash .. '~1..' .. to.hash)
-      vim.cmd(':DiffviewOpen ' .. from.hash .. '~1..' .. to.hash)
-    end,
-  },
+-- For auto import on save
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*",
+  callback = function()
+    vim.lsp.buf.code_action({
+      context = { only = { "source.fixAll" } },
+      apply = true
+    })
+  end,
 })
 
+-- Git
+require("neogit").setup({
+  filewatcher = {
+    enabled = true,
+    interval = 1000,
+  },
+  graph_style = "kitty",
+})
+
+-- Auto diagnostic
+vim.api.nvim_create_autocmd("CursorHold", {
+  callback = function()
+    vim.diagnostic.open_float(nil, { focus = false })
+  end,
+})
+-- set tim delay
+vim.o.updatetime = 500
+-- auto show erro
+vim.diagnostic.config({
+  virtual_text = { severity = vim.diagnostic.severity.ERROR },
+})
 
 -- nvim-cmp setup
 local cmp = require("cmp")
@@ -420,17 +433,22 @@ vim.keymap.set('n', '<leader>tn', '<Cmd>tabnew<CR>', { silent = true })
 -- Close Tab
 vim.keymap.set('n', '<leader>tq', '<Cmd>tabclose<CR>', { silent = true })
 
--- Git Graph
-vim.keymap.set('n', '<leader>gl', function()
-  require('gitgraph').draw({}, { all = true, max_count = 5000 })
-end, { desc = "GitGraph - Draw" })
+-- NeoGit
+vim.keymap.set('n', '<leader>gl', '<Cmd>Neogit<CR>', { silent = true })
 
 -- Keymap lspsaga hover_doc
 vim.keymap.set('n', '<leader>K', '<Cmd>Lspsaga hover_doc<CR>', { silent = true })
 
 -- UFO controller
-vim.keymap.set('n', '<leader>l', require('ufo').openAllFolds)
-vim.keymap.set('n', '<leader>h', require('ufo').closeAllFolds)
+vim.keymap.set('n', '<leader>l','<Cmd>foldopen<CR>', { silent = true })
+vim.keymap.set('n', '<leader>h', '<Cmd>foldclose<CR>', { silent = true })
+
+-- LSP Control
+
+vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+vim.keymap.set("n", "<leader>gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
+vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, { desc = "Show references" })
+vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = "Show code action"})
 
 EOF
 
