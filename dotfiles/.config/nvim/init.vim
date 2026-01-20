@@ -20,6 +20,13 @@ Plug 'williamboman/mason.nvim'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'L3MON4D3/LuaSnip'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'} " Syntax Highlight >>> npm install -g tree-sitter-cli
+
+" Debugger
+Plug 'mfussenegger/nvim-dap' " Install pacman -S delve
+Plug 'nvim-neotest/nvim-nio'
+Plug 'rcarriga/nvim-dap-ui'
+Plug 'leoluz/nvim-dap-go'
 
 " Enhance Nvim
 Plug 'echasnovski/mini.nvim', { 'branch': 'stable' }
@@ -30,12 +37,14 @@ Plug 'nvim-telescope/telescope.nvim' "telescope for fast switching or searching 
 Plug 'nvim-tree/nvim-web-devicons' "icon plugin
 Plug 'MunifTanjim/nui.nvim' "UI enhancement
 Plug 'nvim-lualine/lualine.nvim' "Line enhancement
-Plug 'romainl/vim-cool' " Remove higlight after search done (why would it require a plugin to do something this?)
+Plug 'romainl/vim-cool' " Remove highlight after search done (why would it require a plugin to do something this?)
 Plug 'sphamba/smear-cursor.nvim' " Cursor animation
 Plug 'ya2s/nvim-cursorline' " Cursor line highlight
 Plug 'kevinhwang91/nvim-ufo' " Fold/Unfold scope
-Plug 'kevinhwang91/promise-async' " depdency for nvim-ufo
+Plug 'kevinhwang91/promise-async' " dependency for nvim-ufo
 Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' } " Prettier auto format
+Plug 'folke/snacks.nvim'
+Plug 'lewis6991/satellite.nvim' " Satellite to displays decorated scrollbars (easier to find error)
 
 " Ease of use
 Plug 'nvim-neo-tree/neo-tree.nvim' "File Explorer as tree
@@ -47,7 +56,7 @@ Plug 'akinsho/toggleterm.nvim', {'tag' : '*'} "Toggle terminal
 Plug 'gelguy/wilder.nvim' " Cmd hint
 Plug 'roxma/nvim-yarp' " yarp for cmd hint
 Plug 'roxma/vim-hug-neovim-rpc' " for cmd hint
-
+Plug 'romgrk/fzy-lua-native' " for fuzzy search work with wilder
 
 call plug#end()
 
@@ -60,16 +69,18 @@ set encoding=UTF-8
 set ambiwidth=single
 set termguicolors
 syntax on
-colorscheme tokyonight
+colorscheme tokyonight-night
 set signcolumn=yes:1 " Fix glitch when moving cursor through file (icon rendering at line number make it glitch)
+
+" auto set title with current directory
+set title
+set titlestring=💻%{fnamemodify(getcwd(),':t')}
 
 " Global config
 
 " Minimap
 let g:minimap_git_colors = 1
 let g:minimap_highlight_search = 1
-
-
 
 " Lua config
 lua << EOF
@@ -110,11 +121,20 @@ require('lualine').setup({
       statusline = { 'neo-tree' },
       tabline = { 'neo-tree' },
     }
-  }
+  },
+ sections = {
+    lualine_a = {'mode'},
+    lualine_b = {'branch', 'diff', 'diagnostics'},
+    lualine_c = {'filename'},
+    lualine_x = {'encoding', 'fileformat', 'filetype'},
+    lualine_y = {'lsp_status', 'location'},
+    lualine_z = {"os.date('%X %a')"},
+ }
 })
 
 -- uifloatup for lsp (Might not use)
-require("lspsaga").setup({
+local lspsaga = require("lspsaga")
+lspsaga.setup({
   ui = {
     border = "rounded"
   }
@@ -136,14 +156,24 @@ require("neo-tree").setup({
   },
   window = {
     width = 25
-  }
+  },
+  default_component_configs = {
+    diagnostics = {
+      symbols = {
+        hint = "󰌶",
+        info = "󰋽",
+        warn = "󰀪",
+        error = "󰅚",
+      },
+    },
+  },
 })
 local events = require("neo-tree.events")
 events.fire_event(events.GIT_EVENT)
 
 -- UFO Fold/unfold setup
 require('ufo').setup()
-vim.o.foldcolumn = '1' -- '0' is not bad
+vim.o.foldcolumn = '0' -- '0' is not bad
 vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true
@@ -152,12 +182,24 @@ require('gitsigns').setup({})
 
 -- Cmd Hint
 local wilder = require('wilder')
-wilder.setup({modes = {':', '/', '?'}})
+wilder.setup({modes = {':', '?'}})
+
+wilder.set_option("pipeline", {
+  wilder.branch(
+    wilder.cmdline_pipeline({
+      fuzzy = 1,
+      fuzzy_filter = wilder.lua_fzy_filter(), -- IMPORTANT
+    }),
+    wilder.search_pipeline()
+  ),
+})
+
 require("wilder").set_option(
   "renderer",
   require("wilder").popupmenu_renderer(
     wilder.popupmenu_border_theme({
-      hilights = {
+      highlighter = wilder.lua_fzy_highlighter(),
+      highlights = {
         border = 'Normal',
       },
       pumblend = 20,
@@ -226,7 +268,7 @@ require("bufferline").setup{
     },
     diagnostics = "cmp",
     modified_icon = '●',
-    show_close_icon = false,
+    show_close_icon = true,
     show_buffer_close_icons = false,
     always_show_bufferline = true,
   }
@@ -274,6 +316,39 @@ require("vscode-diff").setup({
   },
 })
 
+-- Snack Setup
+require("snacks").setup({
+  notifier = {
+    enabled = true,
+    timeout = 3000, -- default timeout in ms
+    width = { min = 40, max = 0.4 },
+    height = { min = 1, max = 0.6 },
+    margin = { top = 0, right = 1, bottom = 0 },
+    padding = true,
+    sort = { "level", "added" },
+    level = vim.log.levels.INFO,
+    style = "compact", -- "minimal", "compact", or "fancy"
+  },
+})
+
+vim.api.nvim_create_autocmd("LspProgress", {
+  ---@param ev {data: {client_id: integer, params: lsp.ProgressParams}}
+  callback = function(ev)
+    local spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+    vim.notify(vim.lsp.status(), "info", {
+      id = "lsp_progress",
+      title = "LSP Progress",
+      opts = function(notif)
+        notif.icon = ev.data.params.value.kind == "end" and " "
+          or spinner[math.floor(vim.uv.hrtime() / (1e6 * 80)) % #spinner + 1]
+      end,
+    })
+  end,
+})
+
+
+-- Optional: Set as the default notify function
+vim.notify = require("snacks").notifier.notify
 
 -- LSP Setup
 require("mason").setup()
@@ -316,35 +391,170 @@ for name, cfg in pairs(servers) do
   vim.lsp.config(name, cfg)
 end
 
+-- dap debugger setup
+local dap, dapui = require("dap"), require("dapui")
+dapui.setup()
+dap.listeners.before.attach.dapui_config = function()
+  dapui.open()
+end
+dap.listeners.before.launch.dapui_config = function()
+  dapui.open()
+end
+dap.listeners.before.event_terminated.dapui_config = function()
+  dapui.close()
+end
+dap.listeners.before.event_exited.dapui_config = function()
+  dapui.close()
+end
+vim.diagnostic.config({
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = "󰅚",
+      [vim.diagnostic.severity.WARN]  = "󰀪",
+      [vim.diagnostic.severity.INFO]  = "󰋽",
+      [vim.diagnostic.severity.HINT]  = "󰌶",
+    },
+  },
+})
+vim.fn.sign_define("DapBreakpoint", {
+  text = "●",
+  texthl = "DapBreakpoint",
+  linehl = "",
+  numhl = ""
+})
+vim.fn.sign_define("DapBreakpointCondition", {
+  text = "◉",
+  texthl = "DapBreakpointCondition",
+})
+vim.api.nvim_set_hl(0, "DapBreakpoint", {
+  fg = "#e06c75",
+})
+vim.fn.sign_define("DapStopped", {
+  text = "▶",
+  texthl = "DapStopped",
+  linehl = "DapStoppedLine",
+  numhl = ""
+})
+vim.api.nvim_set_hl(0, "DapStopped", {
+  fg = "#50fa7b", -- green arrow
+})
+vim.api.nvim_set_hl(0, "DapStoppedLine", {
+  bg = "#2a2f3a", -- subtle background
+})
+
+require('dap-go').setup()
+
+-- Syntax Tree-sitter
+require('nvim-treesitter').install({ 'rust', 'javascript', 'typescript','go'  })
+-- might not need setup?
+require('nvim-treesitter').setup({
+  highlight = {
+    enable = true,
+  },
+})
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("EnableTreesitterHighlighting", { clear = true }),
+  desc = "Try to enable tree-sitter syntax highlighting",
+  pattern = "*", -- run on *all* filetypes
+  callback = function()
+    pcall(function() vim.treesitter.start() end)
+  end,
+})
 -- For auto import on save
 vim.api.nvim_create_autocmd("BufWritePre", {
   pattern = "*",
   callback = function()
     vim.lsp.buf.code_action({
-      context = { only = { "source.fixAll" } },
+      context = { only = { "source.organizeImports", "source.fixAll" } },
       apply = true
     })
   end,
+})
+
+-- Create an Autocmd group for managing format-on-save events
+vim.api.nvim_create_autocmd("BufWritePre", {
+  callback = function()
+    -- Only run if the buffer is attached to an LSP that supports formatting
+    if vim.diagnostic.get(0) then
+      vim.lsp.buf.format({ async = false }) -- 'async = false' ensures formatting completes before saving
+    end
+  end,
+  desc = "Auto format on save",
 })
 
 -- Git
 require("neogit").setup({
   filewatcher = {
     enabled = true,
-    interval = 1000,
+    interval = 100,
   },
+  auto_refresh = true,
   graph_style = "kitty",
+  mappings = {
+    status = {
+      ["<c-j>"] = false,
+    }
+ }
+})
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "Neogit*",
+  callback = function()
+    local ok, neogit = pcall(require, "neogit")
+    if ok then
+      neogit.refresh()
+    end
+  end,
+})
+
+-- Satellite
+require('satellite').setup({
+  zindex = 40,            -- above most UI but below popups
+  handlers = {
+    cursor = {
+      enable = false,     -- noisy, not useful
+    },
+    search = {
+      enable = true,
+    },
+    diagnostic = {
+      enable = true,
+      signs = { "󰅚", "󰀪", "󰋽", "󰌶" },
+      min_severity = vim.diagnostic.severity.HINT,
+    },
+    gitsigns = {
+      enable = true,
+      signs = { "+", "~", "-" },
+    },
+    marks = {
+      enable = false,     -- usually clutter
+    },
+    fold = {
+      enable = false,     -- redundant with foldcolumn
+    },
+  },
 })
 
 -- Auto diagnostic
 vim.api.nvim_create_autocmd("CursorHold", {
   callback = function()
-    vim.diagnostic.open_float(nil, { focus = false })
+    local diag = vim.diagnostic.get(0, { lnum = vim.fn.line(".") - 1 })
+    if #diag > 0 then
+      -- vim.cmd("Lspsaga show_line_diagnostics")
+      vim.diagnostic.open_float(nil, {
+        focusable = false,
+        close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+        border = "rounded",
+        source = "if_many",
+        prefix = "",
+        scope = "cursor",
+      })
+    end
   end,
 })
 -- set tim delay
 vim.o.updatetime = 500
--- auto show erro
+-- auto show error
 vim.diagnostic.config({
   virtual_text = { severity = vim.diagnostic.severity.ERROR },
 })
@@ -393,10 +603,7 @@ cmp.setup({
 
 -- telescope finder
 local builtin = require('telescope.builtin')
--- vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
--- vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
--- vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
--- vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
+vim.keymap.set('n', '<C-f>', builtin.live_grep, { desc = 'Telescope live grep' })
 
 -- Key Setup
 vim.keymap.set("n", "<leader>e", ":Neotree toggle<CR>")
@@ -420,9 +627,15 @@ vim.keymap.set('n', '<Tab>', '<Cmd>BufferLineCycleNext<CR>', { silent = true })
 -- Navigate to the previous buffer
 vim.keymap.set('n', '<S-Tab>', '<Cmd>BufferLineCyclePrev<CR>', { silent = true })
 -- Close Buffer using bufdelete
-vim.keymap.set('n', '<leader>q', '<Cmd>Bdelete<CR>', { silent = true })
+vim.keymap.set('n', '<leader>w', '<Cmd>Bdelete<CR>', { silent = true })
+-- New  [No Name] buffer
+vim.keymap.set('n', '<leader>n', ':enew<CR>', { silent = true })
 -- Save
 vim.keymap.set('n', '<leader>s', ':w<CR>', { silent = true })
+vim.keymap.set('n', '<leader>x', ':x<CR>', { silent = true })
+
+-- Quit all
+vim.keymap.set('n', '<leader>Q', ':qall<CR>')
 
 -- Next Tab
 vim.keymap.set('n', '<leader><Tab>', '<Cmd>tabnext<CR>', { silent = true })
@@ -433,22 +646,45 @@ vim.keymap.set('n', '<leader>tn', '<Cmd>tabnew<CR>', { silent = true })
 -- Close Tab
 vim.keymap.set('n', '<leader>tq', '<Cmd>tabclose<CR>', { silent = true })
 
--- NeoGit
-vim.keymap.set('n', '<leader>gl', '<Cmd>Neogit<CR>', { silent = true })
-
--- Keymap lspsaga hover_doc
-vim.keymap.set('n', '<leader>K', '<Cmd>Lspsaga hover_doc<CR>', { silent = true })
-
 -- UFO controller
 vim.keymap.set('n', '<leader>l','<Cmd>foldopen<CR>', { silent = true })
 vim.keymap.set('n', '<leader>h', '<Cmd>foldclose<CR>', { silent = true })
 
 -- LSP Control
-
 vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, { desc = "Go to definition" })
 vim.keymap.set("n", "<leader>gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
 vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, { desc = "Show references" })
 vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = "Show code action"})
+vim.keymap.set('n', '<leader>?', '<Cmd>Lspsaga hover_doc<CR>', { silent = true })
+vim.keymap.set('n', '<F2>', '<Cmd>Lspsaga rename<CR>', { silent = true })
+
+-- Neogit
+vim.keymap.set('n', '<leader>G', '<Cmd>Neogit<CR>', { silent = true })
+vim.keymap.set('n', '<leader>gl', function()
+require('neogit').action("log", "log_all_branches", {"--graph", "--color", "--decorate", "--date-order"})()
+end, { silent = true })
+
+vim.keymap.set("n", "<leader>dv", function()
+  -- This assumes you are in a Neogit buffer (Log or Status)
+  local item = require("neogit.lib.git.status").get_at_cursor()
+  if item and item.oid then
+    vim.cmd("CodeDiff " .. item.oid)
+  else
+    print("No commit found under cursor")
+  end
+end, { desc = "Explore commit with vscode-diff" })
+
+-- Dap Debugger
+vim.keymap.set("n", "<leader><leader>", function()
+  require("dap").toggle_breakpoint()
+  vim.notify("Breakpoint toggled", vim.log.levels.INFO)
+end)
+vim.keymap.set("n", "<F5>", dap.continue)
+vim.keymap.set("n", "<F9>", dap.toggle_breakpoint)
+vim.keymap.set("n", "<F10>", dap.step_over)
+vim.keymap.set("n", "<F11>", dap.step_into)
+vim.keymap.set("n", "<F12>", dap.step_out)
+
 
 EOF
 
