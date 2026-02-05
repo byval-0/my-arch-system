@@ -64,6 +64,7 @@ call plug#end()
 set number
 set hlsearch
 set nocompatible
+set relativenumber
 set autoindent
 set encoding=UTF-8
 set ambiwidth=single
@@ -394,6 +395,17 @@ end
 -- dap debugger setup
 local dap, dapui = require("dap"), require("dapui")
 dapui.setup()
+require("dap-go").setup({
+  dap_configurations = {
+    {
+      type = "go",
+      name = "Debug Package",
+      request = "launch",
+      mode = "debug",
+      program = "${workspaceFolder}",
+    },
+  },
+})
 dap.listeners.before.attach.dapui_config = function()
   dapui.open()
 end
@@ -442,7 +454,7 @@ vim.api.nvim_set_hl(0, "DapStoppedLine", {
   bg = "#2a2f3a", -- subtle background
 })
 
-require('dap-go').setup()
+
 
 -- Syntax Tree-sitter
 require('nvim-treesitter').install({ 'rust', 'javascript', 'typescript','go'  })
@@ -627,7 +639,7 @@ vim.keymap.set('n', '<Tab>', '<Cmd>BufferLineCycleNext<CR>', { silent = true })
 -- Navigate to the previous buffer
 vim.keymap.set('n', '<S-Tab>', '<Cmd>BufferLineCyclePrev<CR>', { silent = true })
 -- Close Buffer using bufdelete
-vim.keymap.set('n', '<leader>w', '<Cmd>Bdelete<CR>', { silent = true })
+vim.keymap.set('n', '<leader>q', '<Cmd>Bdelete<CR>', { silent = true })
 -- New  [No Name] buffer
 vim.keymap.set('n', '<leader>n', ':enew<CR>', { silent = true })
 -- Save
@@ -651,10 +663,10 @@ vim.keymap.set('n', '<leader>l','<Cmd>foldopen<CR>', { silent = true })
 vim.keymap.set('n', '<leader>h', '<Cmd>foldclose<CR>', { silent = true })
 
 -- LSP Control
-vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, { desc = "Go to definition" })
-vim.keymap.set("n", "<leader>gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
-vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, { desc = "Show references" })
-vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { desc = "Show code action"})
+vim.keymap.set("n", "<leader>gd", '<Cmd>Lspsaga peek_definition<CR>', { desc = "Peek definition" })
+vim.keymap.set("n", "<leader>gD", '<Cmd>Lspsaga goto_definition<CR>', { desc = "Go to declaration" })
+vim.keymap.set("n", "<leader>gr", '<Cmd>Lspsaga finder<CR>', { desc = "Finder show references & implementation" })
+vim.keymap.set('n', '<leader>ca', '<Cmd>Lspsaga code_action<CR>', { desc = "Show code action"})
 vim.keymap.set('n', '<leader>?', '<Cmd>Lspsaga hover_doc<CR>', { silent = true })
 vim.keymap.set('n', '<F2>', '<Cmd>Lspsaga rename<CR>', { silent = true })
 
