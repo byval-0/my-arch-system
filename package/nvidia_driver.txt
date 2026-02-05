@@ -1,0 +1,27 @@
+To clean install nvidia driver, you better following this repository
+https://github.com/korvahannu/arch-nvidia-drivers-installation-guide?tab=readme-ov-file
+
+My GTX1060 is using Pascal Driver
+So the latest driver that support as I know is nvidia-580xx-dkms
+
+if you installed a newer version than this, your graphic card will not loded.
+
+So, go ahead
+$ yay -S nvidia-580xx-dkms nvidia-580xx-utils
+
+Then you have to fix pacman to not upgrade this driver
+go to /etc/pacman.conf
+
+Add these to below # Pacman won't upgrade packages listed in IgnorePkg and IgnoreGroup
+IgnorePkg = nvidia nvidia-dkms nvidia-utils nvidia-open nvidia-open-dkms
+
+For yay
+go to ~/.config/yay/config.json
+
+and add this
+{
+  "IgnorePkg": [
+    "nvidia-580xx-dkms",
+    "nvidia-580xx-utils"
+  ]
+}
