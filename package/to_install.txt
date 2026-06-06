@@ -3,6 +3,8 @@ sudo pacman -Syyu
 
 # Utility tool
 sudo pacman -S --needed kitty fastfetch htop vim neovim base-devel linux-headers git sudo wget cmake rust exa font-manager jdk-openjdk meson cpio
+# for emoji font
+sudo yay -S emoji-font
 
 # Package Manager
 # Install yay
